@@ -1,0 +1,56 @@
+{
+  "detections": [
+    {
+      "class": "car",
+      "score": 0.93,
+      "box": [120, 80, 260, 210]
+    },
+    {
+      "class": "person",
+      "score": 0.87,
+      "box": [300, 150, 380, 320]
+    },
+    {
+      "class": "truck",
+      "score": 0.82,
+      "box": [50, 200, 180, 350]
+    },
+    {
+      "class": "bicycle",
+      "score": 0.75,
+      "box": [400, 180, 480, 280]
+    }
+  ],
+  "instances": [
+    {
+      "class": "road-marking",
+      "score": 0.88,
+      "mask": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "class": "sidewalk",
+      "score": 0.85,
+      "mask": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    }
+  ],
+  "labels": [
+    {
+      "class": "urban-scene",
+      "score": 0.76
+    },
+    {
+      "class": "traffic",
+      "score": 0.68
+    },
+    {
+      "class": "daylight",
+      "score": 0.92
+    }
+  ],
+  "metadata": {
+    "inference_time": 18.5,
+    "backend": "ONNX",
+    "model_version": "v2.1.0",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}
