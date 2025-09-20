@@ -23,10 +23,14 @@ import {
 } from 'lucide-react';
 import { InferenceResponse, BackendType, BACKEND_CONFIGS } from '@/types';
 import { simulateInference, isLiveMode } from '@/lib/inference';
+import { validateFile, getFileTypeCategory } from '@/lib/utils';
+import { logger, logInfo, logError, logBusiness } from '@/lib/logger';
+import { TracingUtils, MetricsUtils } from '@/lib/tracing';
 import MediaViewer from '@/components/MediaViewer';
 import ResultsTab from '../components/ResultsTab';
 import DocsTab from '../components/DocsTab';
 import DownloadsTab from '../components/DownloadsTab';
+import OverlayControls from '@/components/ui/OverlayControls';
 import { useToast, ToastContainer } from '@/components/ui/toast';
 
 export default function Home() {
@@ -44,10 +48,27 @@ export default function Home() {
 
   useEffect(() => {
     setLiveMode(isLiveMode());
+    
+    // Listen for file upload events from OverlayControls
+    const handleFileUploadEvent = (event: CustomEvent) => {
+      handleFileUpload(event.detail);
+    };
+    
+    window.addEventListener('fileUpload', handleFileUploadEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('fileUpload', handleFileUploadEvent as EventListener);
+    };
   }, []);
 
   const handleInference = async () => {
     if (!currentImage) {
+      logBusiness('Inference attempted without image', {
+        component: 'main-page',
+        operation: 'inference',
+        backend: selectedBackend,
+      });
+      
       showToast({
         title: 'No Image Selected',
         description: 'Please select an image first',
@@ -55,6 +76,13 @@ export default function Home() {
       });
       return;
     }
+
+    logBusiness('Starting inference', {
+      component: 'main-page',
+      operation: 'inference',
+      backend: selectedBackend,
+      hasImage: !!currentImage,
+    });
 
     setIsProcessing(true);
     setProgress(0);
@@ -84,6 +112,16 @@ export default function Home() {
       setResults(response);
       setProgress(100);
       
+      logBusiness('Inference completed successfully', {
+        component: 'main-page',
+        operation: 'inference',
+        backend: selectedBackend,
+        detections: response.detections.length,
+        instances: response.instances.length,
+        labels: response.labels.length,
+        inferenceTime: response.metadata.inference_time,
+      });
+      
       showToast({
         title: 'Inference Complete',
         description: `Found ${response.detections.length} detections in ${response.metadata.inference_time}ms`,
@@ -95,10 +133,27 @@ export default function Home() {
         setIsProcessing(false);
       }, 500);
     } catch (error) {
-      console.error('Inference failed:', error);
+      logError('Inference failed', {
+        component: 'main-page',
+        operation: 'inference',
+        backend: selectedBackend,
+      }, error as Error);
+      
+      // Provide more specific error messages based on error type
+      let errorMessage = 'Please try again or check your connection';
+      if (error instanceof Error) {
+        if (error.message.includes('Network error')) {
+          errorMessage = 'Network connection issue. Please check your internet connection.';
+        } else if (error.message.includes('Data parsing error')) {
+          errorMessage = 'Invalid data received. Please try again.';
+        } else if (error.message.includes('Inference failed')) {
+          errorMessage = error.message;
+        }
+      }
+      
       showToast({
         title: 'Inference Failed',
-        description: 'Please try again or check your connection',
+        description: errorMessage,
         type: 'error'
       });
       setIsProcessing(false);
@@ -108,41 +163,36 @@ export default function Home() {
   };
 
   const handleFileUpload = (file: File) => {
-    // Validate file type
-    const validTypes = [
-      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml', 
-      'video/mp4', 'video/webm', 'video/ogg', 'video/mov', 'video/avi'
-    ];
-    if (!validTypes.includes(file.type)) {
+    // Enhanced file validation
+    const validation = validateFile(file);
+    if (!validation.isValid) {
       showToast({
-        title: 'Invalid File Type',
-        description: 'Please upload an image (JPG, PNG, GIF, SVG) or video (MP4, WebM, OGG, MOV, AVI) file',
+        title: 'File Validation Failed',
+        description: validation.error || 'Invalid file format or size',
         type: 'error'
       });
       return;
     }
 
-    // Validate file size (max 50MB)
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
+    try {
+      // Create object URL for the uploaded file
+      const fileUrl = URL.createObjectURL(file);
+      setCurrentImage(fileUrl);
+
+      const fileType = getFileTypeCategory(file.type);
       showToast({
-        title: 'File Too Large',
-        description: 'Please upload a file smaller than 50MB',
+        title: `${fileType.charAt(0).toUpperCase() + fileType.slice(1)} Uploaded`,
+        description: `${file.name} uploaded successfully`,
+        type: 'success'
+      });
+    } catch (error) {
+      console.error('File upload error:', error);
+      showToast({
+        title: 'Upload Failed',
+        description: 'Failed to process the uploaded file. Please try again.',
         type: 'error'
       });
-      return;
     }
-
-    // Create object URL for the uploaded file
-    const fileUrl = URL.createObjectURL(file);
-    setCurrentImage(fileUrl);
-
-    const fileType = file.type.startsWith('video/') ? 'video' : 'image';
-    showToast({
-      title: `${fileType.charAt(0).toUpperCase() + fileType.slice(1)} Uploaded`,
-      description: `${file.name} uploaded successfully`,
-      type: 'success'
-    });
   };
 
   const handleScreenshot = async () => {
@@ -441,88 +491,14 @@ export default function Home() {
             />
             
             {/* Controls */}
-            <Card className="hover:shadow-lg transition-shadow duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                    <Settings className="h-4 w-4 text-white" />
-                  </div>
-                  <span>Display Controls</span>
-                </CardTitle>
-                <CardDescription>
-                  Toggle overlay elements and select media for inference
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                    <Switch
-                      id="detections"
-                      checked={showDetections}
-                      onCheckedChange={setShowDetections}
-                    />
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <Label htmlFor="detections" className="font-medium">Show Detections</Label>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                    <Switch
-                      id="instances"
-                      checked={showInstances}
-                      onCheckedChange={setShowInstances}
-                    />
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <Label htmlFor="instances" className="font-medium">Show Instances</Label>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                    <Switch
-                      id="labels"
-                      checked={showLabels}
-                      onCheckedChange={setShowLabels}
-                    />
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      <Label htmlFor="labels" className="font-medium">Show Labels</Label>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm text-muted-foreground">Upload Media</h4>
-                  <div className="space-y-3">
-                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                      <input
-                        type="file"
-                        id="file-upload"
-                        accept="image/*,video/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(file);
-                          e.target.value = ''; // Clear the input
-                        }}
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="file-upload"
-                        className="cursor-pointer flex flex-col items-center space-y-2"
-                      >
-                        <Upload className="h-8 w-8 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Click to upload or drag and drop</p>
-                          <p className="text-xs text-muted-foreground">Images and videos supported</p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                  
-        </div>
-              </CardContent>
-            </Card>
+            <OverlayControls
+              showDetections={showDetections}
+              showInstances={showInstances}
+              showLabels={showLabels}
+              onDetectionsChange={setShowDetections}
+              onInstancesChange={setShowInstances}
+              onLabelsChange={setShowLabels}
+            />
           </TabsContent>
 
           <TabsContent value="results">

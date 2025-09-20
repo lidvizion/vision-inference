@@ -6,9 +6,21 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "logs:dev": "tail -f logs/combined.log | jq '.'",
+    "logs:error": "tail -f logs/error.log | jq '.'",
+    "observability:setup": "docker-compose -f docker-compose.observability.yml up -d",
+    "observability:down": "docker-compose -f docker-compose.observability.yml down",
+    "test:observability": "node scripts/test-observability.js"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.64.1",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.205.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.205.0",
+    "@opentelemetry/instrumentation-fetch": "^0.205.0",
+    "@opentelemetry/instrumentation-http": "^0.205.0",
+    "@opentelemetry/sdk-node": "^0.205.0",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-select": "^2.2.6",
@@ -16,6 +28,8 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@sentry/nextjs": "^10.12.0",
+    "@sentry/profiling-node": "^10.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
@@ -23,7 +37,8 @@
     "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

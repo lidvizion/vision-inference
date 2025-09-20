@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Upload, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { InferenceResponse, Detection, Instance } from '@/types';
+import { validateFile, getFileTypeCategory } from '@/lib/utils';
 
 interface MediaViewerProps {
   imageUrl: string;
@@ -60,6 +61,13 @@ export default function MediaViewer({
     const file = files[0];
     
     if (file && onFileUpload) {
+      // Validate file before processing
+      const validation = validateFile(file);
+      if (!validation.isValid) {
+        console.error('File validation failed:', validation.error);
+        // Let the parent component handle the error display
+        return;
+      }
       onFileUpload(file);
     }
   };

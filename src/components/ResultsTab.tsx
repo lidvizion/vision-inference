@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { InferenceResponse, BackendType, BACKEND_CONFIGS } from '@/types';
 import { useState } from 'react';
+import { useToast } from '@/components/ui/toast';
 
 interface ResultsTabProps {
   results: InferenceResponse | null;
@@ -24,6 +25,7 @@ interface ResultsTabProps {
 
 export default function ResultsTab({ results, selectedBackend }: ResultsTabProps) {
   const [copied, setCopied] = useState(false);
+  const { showToast } = useToast();
 
   const handleCopyJSON = async () => {
     if (!results) return;
@@ -31,9 +33,19 @@ export default function ResultsTab({ results, selectedBackend }: ResultsTabProps
     try {
       await navigator.clipboard.writeText(JSON.stringify(results, null, 2));
       setCopied(true);
+      showToast({
+        title: 'Copied to Clipboard',
+        description: 'Inference results copied successfully',
+        type: 'success'
+      });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
+      showToast({
+        title: 'Copy Failed',
+        description: 'Unable to copy to clipboard. Please try again or use the download option.',
+        type: 'error'
+      });
     }
   };
 
