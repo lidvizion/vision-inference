@@ -1,0 +1,11 @@
+{
+  "name": "Edge Vision Inference SDK",
+  "slug": "edge-vision-inference-sdk",
+  "category": "edge-inference",
+  "task": "multi-type",
+  "inputs": ["image", "video"],
+  "outputs": ["detections", "instances", "labels"],
+  "demo": {
+    "image": "/og/edge-vision-inference-sdk.png"
+  }
+}

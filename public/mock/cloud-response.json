@@ -1,0 +1,75 @@
+{
+  "detections": [
+    {
+      "class": "car",
+      "score": 0.96,
+      "box": [118, 78, 262, 212]
+    },
+    {
+      "class": "person",
+      "score": 0.92,
+      "box": [298, 148, 382, 322]
+    },
+    {
+      "class": "truck",
+      "score": 0.88,
+      "box": [48, 198, 182, 352]
+    },
+    {
+      "class": "bicycle",
+      "score": 0.81,
+      "box": [398, 178, 482, 282]
+    },
+    {
+      "class": "motorcycle",
+      "score": 0.76,
+      "box": [502, 202, 552, 278]
+    },
+    {
+      "class": "bus",
+      "score": 0.74,
+      "box": [20, 220, 120, 380]
+    }
+  ],
+  "instances": [
+    {
+      "class": "road-marking",
+      "score": 0.93,
+      "mask": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "class": "sidewalk",
+      "score": 0.90,
+      "mask": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "class": "vegetation",
+      "score": 0.77,
+      "mask": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    }
+  ],
+  "labels": [
+    {
+      "class": "urban-scene",
+      "score": 0.82
+    },
+    {
+      "class": "traffic",
+      "score": 0.75
+    },
+    {
+      "class": "daylight",
+      "score": 0.95
+    },
+    {
+      "class": "crowded",
+      "score": 0.68
+    }
+  ],
+  "metadata": {
+    "inference_time": 220.0,
+    "backend": "Cloud",
+    "model_version": "v2.2.0",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}

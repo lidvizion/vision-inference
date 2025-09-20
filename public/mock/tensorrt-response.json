@@ -1,0 +1,61 @@
+{
+  "detections": [
+    {
+      "class": "car",
+      "score": 0.95,
+      "box": [115, 75, 265, 215]
+    },
+    {
+      "class": "person",
+      "score": 0.89,
+      "box": [295, 145, 385, 325]
+    },
+    {
+      "class": "truck",
+      "score": 0.85,
+      "box": [45, 195, 185, 355]
+    },
+    {
+      "class": "bicycle",
+      "score": 0.78,
+      "box": [395, 175, 485, 285]
+    },
+    {
+      "class": "motorcycle",
+      "score": 0.72,
+      "box": [500, 200, 550, 280]
+    }
+  ],
+  "instances": [
+    {
+      "class": "road-marking",
+      "score": 0.91,
+      "mask": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    },
+    {
+      "class": "sidewalk",
+      "score": 0.88,
+      "mask": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    }
+  ],
+  "labels": [
+    {
+      "class": "urban-scene",
+      "score": 0.79
+    },
+    {
+      "class": "traffic",
+      "score": 0.71
+    },
+    {
+      "class": "daylight",
+      "score": 0.94
+    }
+  ],
+  "metadata": {
+    "inference_time": 12.3,
+    "backend": "TensorRT",
+    "model_version": "v2.1.0",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}

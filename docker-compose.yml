@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # Standard x86_64 build
+  edge-vision-amd64:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      platforms:
+        - linux/amd64
+    image: edge-vision-sdk:amd64
+    container_name: edge-vision-amd64
+    ports:
+      - "8080:8080"
+    environment:
+      - BACKEND=ONNX
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data:rw
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+
+  # NVIDIA Jetson build with TensorRT
+  edge-vision-jetson:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: tensorrt-builder
+      platforms:
+        - linux/arm64
+    image: edge-vision-sdk:jetson
+    container_name: edge-vision-jetson
+    ports:
+      - "8081:8080"
+    environment:
+      - BACKEND=TensorRT
+      - LOG_LEVEL=INFO
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data:rw
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '2.0'
+    # Note: Requires NVIDIA Container Toolkit for GPU access
+    # Install with: curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+    # runtime: nvidia
+
+  # Intel OpenVINO build
+  edge-vision-intel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: openvino-builder
+      platforms:
+        - linux/amd64
+    image: edge-vision-sdk:intel
+    container_name: edge-vision-intel
+    ports:
+      - "8082:8080"
+    environment:
+      - BACKEND=OpenVINO
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data:rw
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '3.0'
+        reservations:
+          memory: 1.5G
+          cpus: '1.5'
+
+  # Development environment
+  edge-vision-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    image: edge-vision-sdk:dev
+    container_name: edge-vision-dev
+    ports:
+      - "8083:8080"
+    environment:
+      - BACKEND=ONNX
+      - LOG_LEVEL=DEBUG
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - ./models:/app/models:ro
+      - ./data:/app/data:rw
+    restart: unless-stopped
+    command: ["/bin/bash", "-c", "while true; do sleep 30; done"]
+
+# Resource Requirements and Cost Analysis:
+#
+# Jetson GPU (TensorRT):
+# - Memory: 2-4GB GPU + 2-4GB RAM
+# - Power: 15-30W (vs 5-10W CPU-only)
+# - Cost: ~$200-400 more than CPU-only setup
+# - Performance: 10-50x faster inference
+# - Use case: Real-time video processing, edge AI
+#
+# Intel OpenVINO:
+# - Memory: 1-3GB RAM
+# - Power: 10-20W
+# - Cost: Minimal additional cost
+# - Performance: 2-5x faster than standard CPU
+# - Use case: Intel CPU optimization, VPU acceleration
+#
+# Standard ONNX:
+# - Memory: 1-2GB RAM
+# - Power: 5-15W
+# - Cost: Base cost
+# - Performance: Baseline performance
+# - Use case: Cross-platform compatibility
+#
+# Build Commands:
+# docker-compose build edge-vision-amd64
+# docker-compose build edge-vision-jetson
+# docker-compose build edge-vision-intel
+# docker-compose build edge-vision-dev
+#
+# Run Commands:
+# docker-compose up edge-vision-amd64
+# docker-compose up edge-vision-jetson
+# docker-compose up edge-vision-intel
+# docker-compose up edge-vision-dev
